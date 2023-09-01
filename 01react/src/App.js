@@ -1,5 +1,5 @@
 import './App.css';
-import {useState, useTransition} from 'react';
+import {useState} from 'react';
 
 
 function Article(props){
@@ -8,7 +8,6 @@ function Article(props){
     {props.body}
   </article>
 }
-
 function Header(props){
   return <header>
     <h1><a href="/" onClick={(event) => {
@@ -18,7 +17,6 @@ function Header(props){
     }>{props.title}</a></h1>
   </header>
 }
-
 function Nav(props){
   const lis = [];
   for(let i = 0; i < props.topics.length; i++){
@@ -38,7 +36,6 @@ function Nav(props){
     </ol>
   </nav>
 }
-
 function Create(props){
   return <article>
     <h2>Create</h2>
@@ -54,33 +51,32 @@ function Create(props){
     </form>
   </article>
 }
-
 function Update(props){
   const [title, setTitle] = useState(props.title);
   const [body, setBody] = useState(props.body);
   return <article>
-  <h2>Update</h2>
-  <form onSubmit={event=>{
-    event.preventDefault();
-    const title = event.target.title.value;
-    const body = event.target.body.value;
-    props.onUpdate(title, body);
-  }}>
-    <p><input type="text" name="title" placeholder="title" value={title} onChange={event=>{
-      setTitle(event.target.value);
-    }}/></p>
-    <p><textarea name="body" placeholder='body' value={body} onchange={event=>{
-      setBody(event.target.value);
-    }}></textarea></p>
-    <p><input type="submit" value="Update"></input></p>
-  </form>
-</article>
+    <h2>Update</h2>
+    <form onSubmit={event=>{
+      event.preventDefault();
+      const title = event.target.title.value;
+      const body = event.target.body.value;
+      props.onUpdate(title, body);
+    }}>
+      <p><input type="text" name="title" placeholder="title" value={title} onChange={(e) => {
+        setTitle(e.target.value);
+      }}/></p>
+      <p><textarea name="body" placeholder='body' value={body} onChange={(e)=> {
+        setBody(e.target.value);
+      }}></textarea></p>
+      <p><input type="submit" value="Update"></input></p>
+    </form>
+  </article>
 }
-
 function App() {
   const [mode, setMode] = useState('WELCOME');
   const [id, setId] = useState(null);
   const [nextId, setNextId] = useState(4);
+
   const [topics, setTopics] = useState([
     {id: 1, title: 'html', body: 'html is ...'},
     {id: 2, title: 'css', body: 'css is ...'},
@@ -100,20 +96,23 @@ function App() {
       }
     }
     content = <Article title={title} body={body}></Article>
-    contextControl = <><li><a href={'/update/' + id} onClick={(event) => {
-      event.preventDefault();
-      setMode('UPDATE');
-    }}>Update</a></li>
-    <li><input type="button" value="Delete" onClick={()=>{
-      const newTopics = []
-      for (let i = 0; i < topics.length; i){
-        if(topics[id] !== id){
-          newTopics.push(topics[i]);
+    contextControl = <>
+      <li><a href={'/update/' + id} onClick={(event) => {
+        event.preventDefault();
+        setMode('UPDATE');
+      }}>Update</a></li>
+      <li><input type="button" value="Delete" onClick={() => {
+        const newTopics = [];
+        for(let i = 0; i<topics.length; i++){
+          if(topics[i].id !== id){
+            newTopics.push(topics[i]);
+          }
         }
-      }
-      setTopics(newTopics);
-    }} /></li>
-    </>;
+        setTopics(newTopics);
+        setMode('WELCOME');
+      }}></input></li>
+    </>
+    ;
   }else if(mode === 'CREATE'){
     content = <Create onCreate={(_title, _body) => {
       const newTopics = [...topics];
@@ -145,6 +144,7 @@ function App() {
       setMode('READ');
     }}></Update>;
   }
+
   return (
     <div>
       <Header title="WEB" onChangeMode={() => {
@@ -162,7 +162,6 @@ function App() {
         }}>Create</a></li>
         {contextControl}
       </ul>
-    
     </div>
   );
 }
