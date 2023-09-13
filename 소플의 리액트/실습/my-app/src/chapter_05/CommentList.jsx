@@ -3,7 +3,7 @@ import Comment from "./Comment";
 
 function CommentList(props){
     return(
-        <div><Comment /></div>
+        <div><Comment name={"왕한솔"} comment={"안녕하세요."} /></div>
     );
 }
 
