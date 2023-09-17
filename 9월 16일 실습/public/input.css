@@ -1,0 +1,6 @@
+.input-text,
+.input-content {
+    display: block;
+    margin: 1rem;
+    background-color: red;
+}

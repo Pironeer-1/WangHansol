@@ -1,25 +1,33 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
-const student=[
-    {
-        name: 'hansol',
-    },
-    {
-        name: 'lee',
-    },
-    {
-        name:'sol',
-    },
-];
+// const students = [
+//   { id: 1, name: "MinKyung" },
+//   { id: 2, name: "HanSol" },
+//   { id: 3, name: "HyunSoo" },
+//   { id: 4, name: "JungGeun" },
+// ];
 
-function AttendanceBook(props){
-    return(
-        <ul>
-            {student.map((student) => {
-                return <li key={student.id}>{student.name}</li>
-            })}
-        </ul>
-    );
-}
+const AttendanceBook = (props) => {
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    fetch("/students.json", {
+      method: "GET",
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        setStudents(result);
+        console.log(result);
+      });
+  }, []);
+
+  return (
+    <ul>
+      {students.map((student) => {
+        return <li>{student.name}</li>;
+      })}
+    </ul>
+  );
+};
 
 export default AttendanceBook;
