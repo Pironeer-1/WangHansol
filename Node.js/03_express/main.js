@@ -8,63 +8,70 @@ var sanitizeHtml = require('sanitize-html');
 var template = require('./lib/template.js');
 var qs = require('querystring');
 var bodyParser = require('body-parser');
+var compression = require('compression');
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(compression());
 
-app.get('/', function(req, res) { //첫 번째 인자에는 경로, 두 번째 인자에는 콜백 함수
+app.get('*', function(req, res, next) {
     fs.readdir('./data', function(err, filelist) {
-        var title='Welcome'
-        var description = 'Hello, Node.js'
-        var list = template.list(filelist)
-        var html = template.HTML(title, list,
-            `<h2>${title}</h2>${description}`,
-            `<a href="/create">create</a>`
+        req.list = filelist;
+        next()
+    });
+});
+
+app.get('/', function(req, res, next) { //첫 번째 인자에는 경로, 두 번째 인자에는 콜백 함수
+
+    var title='Welcome'
+    var description = 'Hello, Node.js'
+    var list = template.list(req.list)
+    var html = template.HTML(title, list,
+        `<h2>${title}</h2>${description}`,
+        `<a href="/create">create</a>`
+    );
+    res.send(html);
+
+});
+
+app.get('/page/:pageId', function (req, res) {
+
+    var filteredId = path.parse(req.params.pageId).base;
+    fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+        var title = req.params.pageId;
+        var sanitizedTitle = sanitizeHtml(title);
+        var sanitizedDescription = sanitizeHtml(description,{
+            allowedTags:['h1']
+        });
+        var list = template.list(req.list);
+        var html = template.HTML(sanitizedTitle, list,
+            `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
+            `<a href="/create">create</a>
+                <a href="/update/${sanitizedTitle}">update</a>
+                <form action="/delete_process" method="post">
+                    <input type="hidden" name="id" value="${sanitizedTitle}">
+                    <input type="submit" value="delete">
+                </form>`
         );
         res.send(html);
     });
 });
 
-app.get('/page/:pageId', function (req, res) {
-    fs.readdir('./data', function (err, filelist) {
-        var filteredId = path.parse(req.params.pageId).base;
-        fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-            var title = req.params.pageId;
-            var sanitizedTitle = sanitizeHtml(title);
-            var sanitizedDescription = sanitizeHtml(description,{
-                allowedTags:['h1']
-            });
-            var list = template.list(filelist);
-            var html = template.HTML(sanitizedTitle, list,
-                `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
-                `<a href="/create">create</a>
-                    <a href="/update/${sanitizedTitle}">update</a>
-                    <form action="/delete_process" method="post">
-                        <input type="hidden" name="id" value="${sanitizedTitle}">
-                        <input type="submit" value="delete">
-                    </form>`
-            );
-            res.send(html);
-        });
-    });
-});
-
 app.get('/create', function(req, res) {
-    fs.readdir('./data', function(err, filelist) {
-        var title ='Web create'
-        var list = template.list(filelist)
-        var html = template.HTML(title, list, `
-            <form action="/create_process" method="post">
-                <p><input type="text" name="title" placeholder="title"></p>
-                <p>
-                    <textarea name="description" placeholder="description"></textarea>
-                </p>
-                <p>
-                    <input type="submit">
-                </p>
-            </form>
-        `, '');
-        res.send(html);
-    });
+
+    var title ='Web create'
+    var list = template.list(req.list);
+    var html = template.HTML(title, list, `
+        <form action="/create_process" method="post">
+            <p><input type="text" name="title" placeholder="title"></p>
+            <p>
+                <textarea name="description" placeholder="description"></textarea>
+            </p>
+            <p>
+                <input type="submit">
+            </p>
+        </form>
+    `, '');
+    res.send(html);
 });
 
 app.post('/create_process', function(req, res) {
