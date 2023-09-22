@@ -261,9 +261,25 @@ app.post('/update_process', function(req, res) {
         var description = post.description;
         fs.rename(`data/${id}`, `data/${title}`, function(err){
             fs.writeFile(`data/${title}`, description, 'utf-8', function (err) {
+                res.redirect(`/?id=${title}`);
                 res.writeHead(302, {Location: `/?id=${title}`});
                 res.end();
             });
+        });
+    });
+});
+
+app.post('/delete_process', function(req, res) {
+    var body = '';
+    req.on('data', function(data){ //request on: 특정 event를 listen할 수 있게 도와줌
+        body += data;
+    });
+    req.on('end', function(){ //data가 끝났음을 알려주는 부분
+        var post =qs.parse(body);
+        var id = post.id;
+        var filteredId = path.parse(id).base;
+        fs.unlink(`data/${filteredId}`, function(err){ //파일 삭제
+            res.redirect('/');
         });
     });
 });
