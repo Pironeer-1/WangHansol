@@ -165,7 +165,7 @@ app.get('/', function(req, res) { //첫 번째 인자에는 경로, 두 번째 �
     });
 });
 
-app.get('/page/:pageId', function (req, res) { 
+app.get('/page/:pageId', function (req, res) {
     fs.readdir('./data', function (err, filelist) {
         var filteredId = path.parse(req.params.pageId).base;
         fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
@@ -178,13 +178,13 @@ app.get('/page/:pageId', function (req, res) {
             var html = template.HTML(sanitizedTitle, list,
                 `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
                 `<a href="/create">create</a>
-                    <a href="update?id=${sanitizedTitle}">update</a>
-                    <form action="delete_process" method="post">
+                    <a href="/update/${sanitizedTitle}">update</a>
+                    <form action="/delete_process" method="post">
                         <input type="hidden" name="id" value="${sanitizedTitle}">
                         <input type="submit" value="delete">
                     </form>`
             );
-            res.send(html); // 'response'를 'res'로 수정
+            res.send(html);
         });
     });
 });
@@ -220,6 +220,50 @@ app.post('/create_process', function(req, res) {
         fs.writeFile(`data/${title}`, description, 'utf-8', function (err) {
             response.writeHead(302, {Location: `/?id=${title}`});
             response.end();
+        });
+    });
+});
+
+app.get('/update/:pageId', function (req, res) {
+    fs.readdir('./data', function(err, filelist){
+        var filteredId = path.parse(req.params.pageId).base;
+        fs.readFile(`data/${filteredId}`, 'utf-8', function(err, description){
+            var title = req.params.pageId
+            var list = template.list(filelist)
+            var html = template.HTML(title, list, `
+            <form action="/update_process" method="post">
+                <input type="hidden" name="id" value="${title}">
+                <p><input type="text" name="title" placeholder="title"></p>
+                <p>
+                    <textarea name="description" placeholder="description"></textarea>
+                </p>
+                <p>
+                    <input type="submit">
+                </p>
+            </form>
+            `,
+            `<a href="/create">Create</a> <a href="/update/${title}">Update</a>`
+            );
+            res.send(html);
+        });
+    });
+});
+
+app.post('/update_process', function(req, res) {
+    var body ='';
+    req.on('data', function(data){
+        body = body + data;
+    });
+    req.on('end', function(){
+        var post = qs.parse(body);
+        var title = post.title;
+        var id = post.id;
+        var description = post.description;
+        fs.rename(`data/${id}`, `data/${title}`, function(err){
+            fs.writeFile(`data/${title}`, description, 'utf-8', function (err) {
+                res.writeHead(302, {Location: `/?id=${title}`});
+                res.end();
+            });
         });
     });
 });
