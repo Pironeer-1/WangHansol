@@ -23,6 +23,7 @@ app.get('*', function (request, response, next) {
 });
 
 app.use('/topic', topicRouter);
+
 app.use('/', indexRouter);
 
 app.use(function (req, res, next) {
